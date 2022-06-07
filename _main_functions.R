@@ -586,55 +586,55 @@ calc_spi <- function(DP){
 }
 calc_spiMP <- compiler::cmpfun(calc_spi)
 
-# The SHI is computed as the number of days with maximum temperatures ??? 29?C 
-# and relative humidity is greater than 50%.
-calc_SHI <- function(tmax, RH){
-  SHI <- ifelse(tmax >= 29 & RH > 50, 1, 0)
-  SHI <- sum(SHI)
-  return(SHI)
-}
-calc_SHIMP <- compiler::cmpfun(calc_SHI)
-
-# Daily pig heat stress index (HSI) 
-# dplyr::case_when(0 ~ normal, 1 ~ alert, 2 ~ danger, 3 ~ emergency)
-calc_HSI <- function(tmax, RH){
-  HSI <- tibble::tibble( HSI = case_when( tmax < 24 ~ 0, 
-                                          tmax <= 24 & RH <= 70 ~ 0, 
-                                          tmax <= 25 & RH <= 40 ~ 0,
-                                          tmax <= 24 & RH > 70 ~ 1,
-                                          tmax <= 25 & RH > 40 ~ 1,
-                                          tmax <= 26 & RH <= 70 ~ 1,
-                                          tmax <= 27 & RH <= 40 ~ 1, #
-                                          tmax <= 26 & RH > 70 ~ 2,
-                                          tmax <= 27 & RH >= 40 & RH < 85 ~ 2, # 
-                                          tmax <= 28 & RH < 85 ~ 2,
-                                          tmax <= 29 & RH < 60 ~ 2,
-                                          tmax <= 30 & RH < 40 ~ 2,
-                                          tmax <= 27 & RH >= 85 ~ 3,
-                                          tmax <= 28 & RH >= 85 ~ 3,
-                                          tmax <= 29 & RH >= 60 ~ 3,
-                                          tmax <= 30 & RH >= 40 ~ 3,
-                                          tmax > 30 ~ 3,  
-                                          TRUE ~ NA_real_) )
-  
-  if(is.na(sum(HSI))){
-    HSI <- tibble(HSI_0 = NA_real_, HSI_1 = NA_real_, HSI_2 = NA_real_, HSI_3 = NA_real_)
-  } else {
-    HSI <- HSI %>% 
-      dplyr::count(HSI) %>%
-      dplyr::mutate(n = n / sum(n),
-                    HSI = paste0('HSI_', HSI)) %>%
-      tidyr::pivot_wider(names_from = HSI, values_from = n)
-  }
-  HSI_names <- HSI %>% names()
-  if(sum(HSI_names == 'HSI_0') < 1){HSI <- bind_cols( tibble(HSI_0 = NA_real_), HSI)}
-  if(sum(HSI_names == 'HSI_1') < 1){HSI <- bind_cols( tibble(HSI_1 = NA_real_), HSI)}
-  if(sum(HSI_names == 'HSI_2') < 1){HSI <- bind_cols( tibble(HSI_2 = NA_real_), HSI)}
-  if(sum(HSI_names == 'HSI_3') < 1){HSI <- bind_cols( tibble(HSI_3 = NA_real_), HSI)}
-  HSI <- dplyr::select(HSI, HSI_0, HSI_1, HSI_2, HSI_3)
-  return(HSI)
-}
-calc_HSIMP <- compiler::cmpfun(calc_HSI)
+# # The SHI is computed as the number of days with maximum temperatures ??? 29?C 
+# # and relative humidity is greater than 50%.
+# calc_SHI <- function(tmax, RH){
+#   SHI <- ifelse(tmax >= 29 & RH > 50, 1, 0)
+#   SHI <- sum(SHI)
+#   return(SHI)
+# }
+# # calc_SHIMP <- compiler::cmpfun(calc_SHI)
+# 
+# # Daily pig heat stress index (HSI) 
+# # dplyr::case_when(0 ~ normal, 1 ~ alert, 2 ~ danger, 3 ~ emergency)
+# calc_HSI <- function(tmax, RH){
+#   HSI <- tibble::tibble( HSI = case_when( tmax < 24 ~ 0, 
+#                                           tmax <= 24 & RH <= 70 ~ 0, 
+#                                           tmax <= 25 & RH <= 40 ~ 0,
+#                                           tmax <= 24 & RH > 70 ~ 1,
+#                                           tmax <= 25 & RH > 40 ~ 1,
+#                                           tmax <= 26 & RH <= 70 ~ 1,
+#                                           tmax <= 27 & RH <= 40 ~ 1, #
+#                                           tmax <= 26 & RH > 70 ~ 2,
+#                                           tmax <= 27 & RH >= 40 & RH < 85 ~ 2, # 
+#                                           tmax <= 28 & RH < 85 ~ 2,
+#                                           tmax <= 29 & RH < 60 ~ 2,
+#                                           tmax <= 30 & RH < 40 ~ 2,
+#                                           tmax <= 27 & RH >= 85 ~ 3,
+#                                           tmax <= 28 & RH >= 85 ~ 3,
+#                                           tmax <= 29 & RH >= 60 ~ 3,
+#                                           tmax <= 30 & RH >= 40 ~ 3,
+#                                           tmax > 30 ~ 3,  
+#                                           TRUE ~ NA_real_) )
+#   
+#   if(is.na(sum(HSI))){
+#     HSI <- tibble(HSI_0 = NA_real_, HSI_1 = NA_real_, HSI_2 = NA_real_, HSI_3 = NA_real_)
+#   } else {
+#     HSI <- HSI %>% 
+#       dplyr::count(HSI) %>%
+#       dplyr::mutate(n = n / sum(n),
+#                     HSI = paste0('HSI_', HSI)) %>%
+#       tidyr::pivot_wider(names_from = HSI, values_from = n)
+#   }
+#   HSI_names <- HSI %>% names()
+#   if(sum(HSI_names == 'HSI_0') < 1){HSI <- bind_cols( tibble(HSI_0 = NA_real_), HSI)}
+#   if(sum(HSI_names == 'HSI_1') < 1){HSI <- bind_cols( tibble(HSI_1 = NA_real_), HSI)}
+#   if(sum(HSI_names == 'HSI_2') < 1){HSI <- bind_cols( tibble(HSI_2 = NA_real_), HSI)}
+#   if(sum(HSI_names == 'HSI_3') < 1){HSI <- bind_cols( tibble(HSI_3 = NA_real_), HSI)}
+#   HSI <- dplyr::select(HSI, HSI_0, HSI_1, HSI_2, HSI_3)
+#   return(HSI)
+# }
+# calc_HSIMP <- compiler::cmpfun(calc_HSI)
 
 # Daily thermal humidity index (THI)
 calc_THI <- function(tmax, RH){
