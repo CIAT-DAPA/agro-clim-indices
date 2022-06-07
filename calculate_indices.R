@@ -64,7 +64,19 @@ calc_AgrClm <- function(season = season, shp_fl = shp_fl){
   # Filtering days within the season
   yrs <- lubridate::year(tmx_dts)
   yrs <- names(table(yrs)[table(yrs) %in% 365:366])
+  
+  tmx_fls <- tmx_fls[lubridate::year(tmx_dts) %in% yrs]
+  tmn_fls <- tmn_fls[lubridate::year(tmn_dts) %in% yrs]
+  tav_fls <- tav_fls[lubridate::year(tav_dts) %in% yrs]
+  srd_fls <- srd_fls[lubridate::year(srd_dts) %in% yrs]
+  rhy_fls <- rhy_fls[lubridate::year(rhy_dts) %in% yrs]
+  
   tmx_dts <- tmx_dts[lubridate::year(tmx_dts) %in% yrs]
+  tmn_dts <- tmn_dts[lubridate::year(tmn_dts) %in% yrs]
+  tav_dts <- tav_dts[lubridate::year(tav_dts) %in% yrs]
+  srd_dts <- srd_dts[lubridate::year(srd_dts) %in% yrs]
+  rhy_dts <- rhy_dts[lubridate::year(rhy_dts) %in% yrs]
+  
   cnd <- lubridate::month(tmx_dts) %in% season # Days within the season
   yrs_dts <- split(tmx_dts[cnd],cumsum(c(1,diff(tmx_dts[cnd])!=1)))
   yrs_dts <<- yrs_dts[-length(yrs_dts)]
