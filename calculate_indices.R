@@ -19,7 +19,7 @@ calc_AgrClm <- function(season = season, shp_fl = shp_fl){
   
   ## Daily files
   # Precipitation
-  chr_pth <- '//ALLIANCEDFS.ALLIANCE.CGIAR.ORG/Database_Global/observed/gridded_products/chirps/daily'
+  chr_pth <- '//catalogue/Workspace14/WFP_ClimateRiskPr/1.Data/Chirps'
   chr_fls <- gtools::mixedsort(list.files(chr_pth, pattern = '*.tif$', full.names = T))
   chr_dts <- strsplit(x = chr_fls, split = 'chirps-v2.0.', fixed = T) %>% purrr::map(2) %>% unlist()
   chr_dts <- strsplit(x = chr_dts, split = '.tif', fixed = T) %>% purrr::map(1) %>% unlist()
@@ -62,6 +62,9 @@ calc_AgrClm <- function(season = season, shp_fl = shp_fl){
   rhy_dts <- as.Date(rhy_dts, "%Y%m%d")
   
   # Filtering days within the season
+  yrs <- lubridate::year(tmx_dts)
+  yrs <- names(table(yrs)[table(yrs) %in% 365:366])
+  tmx_dts <- tmx_dts[lubridate::year(tmx_dts) %in% yrs]
   cnd <- lubridate::month(tmx_dts) %in% season # Days within the season
   yrs_dts <- split(tmx_dts[cnd],cumsum(c(1,diff(tmx_dts[cnd])!=1)))
   yrs_dts <- yrs_dts[-length(yrs_dts)]
