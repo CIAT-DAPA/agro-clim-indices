@@ -141,7 +141,7 @@ calc_AgrClm <- function(season = season, shp_fl = shp_fl){
     }) %>% terra::rast()
   P95 <- P95 %>% terra::mask(shp)
   
-  cat('..... Computing: Crop specific drought index.\n')
+  cat('..... Computing: CSDI Cold spell duration Index.\n')
   CSDI <- 1:length(yrs_dts) %>%
     purrr::map(.f = function(i){
       tmn <- terra::rast(tmn_fls[tmn_dts %in% yrs_dts[[i]]])
