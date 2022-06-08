@@ -96,7 +96,7 @@ calc_AgrClm <- function(season = season, shp_fl = shp_fl){
   yrs_dts <- split(tmx_dts[cnd],cumsum(c(1,diff(tmx_dts[cnd])!=1)))
   yrs_dts <<- yrs_dts[-length(yrs_dts)]
   
-  cat('..... Computing: Average temperature.\n')
+  cat('..... Computing: AT. Average temperature.\n')
   AT <- 1:length(yrs_dts) %>%
     purrr::map(.f = function(i){
       tav <- terra::rast(tav_fls[tav_dts %in% yrs_dts[[i]]])
@@ -108,7 +108,7 @@ calc_AgrClm <- function(season = season, shp_fl = shp_fl){
     }) %>% terra::rast()
   AT <- AT %>% terra::mask(shp)
   
-  cat('..... Computing: Total rainfall.\n')
+  cat('..... Computing: TR. Total rainfall.\n')
   TR <- 1:length(yrs_dts) %>%
     purrr::map(.f = function(i){
       prc <- terra::rast(chr_fls[chr_dts %in% yrs_dts[[i]]])
@@ -120,7 +120,7 @@ calc_AgrClm <- function(season = season, shp_fl = shp_fl){
     }) %>% terra::rast()
   TR <- TR %>% terra::mask(shp)
   
-  cat('..... Computing: Number of days with Tmax above 35C.\n')
+  cat('..... Computing: NTx35. Number of days with Tmax above 35C.\n')
   NTx35 <- 1:length(yrs_dts) %>%
     purrr::map(.f = function(i){
       tmx <- terra::rast(tmx_fls[tmx_dts %in% yrs_dts[[i]]])
@@ -132,7 +132,7 @@ calc_AgrClm <- function(season = season, shp_fl = shp_fl){
     }) %>% terra::rast()
   NTx35 <- NTx35 %>% terra::mask(shp)
   
-  cat('..... Computing: CDD: consecutive dry days.\n')
+  cat('..... Computing: CDD. Maximum number of consecutive dry days.\n')
   CDD <- 1:length(yrs_dts) %>%
     purrr::map(.f = function(i){
       prc <- terra::rast(chr_fls[chr_dts %in% yrs_dts[[i]]])
@@ -144,7 +144,7 @@ calc_AgrClm <- function(season = season, shp_fl = shp_fl){
     }) %>% terra::rast()
   CDD <- CDD %>% terra::mask(shp)
   
-  cat('..... Computing: P5D: rolling average of 5 days.\n')
+  cat('..... Computing: P5D. Rolling precipitation average of 5 days.\n')
   P5D <- 1:length(yrs_dts) %>%
     purrr::map(.f = function(i){
       prc <- terra::rast(chr_fls[chr_dts %in% yrs_dts[[i]]])
@@ -156,7 +156,7 @@ calc_AgrClm <- function(season = season, shp_fl = shp_fl){
     }) %>% terra::rast()
   P5D <- P5D %>% terra::mask(shp)
   
-  cat('..... Computing: P95: percentile 95% of daily precipitation.\n')
+  cat('..... Computing: P95. Percentile 95% of daily precipitation.\n')
   P95 <- 1:length(yrs_dts) %>%
     purrr::map(.f = function(i){
       prc <- terra::rast(chr_fls[chr_dts %in% yrs_dts[[i]]])
@@ -168,7 +168,7 @@ calc_AgrClm <- function(season = season, shp_fl = shp_fl){
     }) %>% terra::rast()
   P95 <- P95 %>% terra::mask(shp)
   
-  cat('..... Computing: CSDI Cold spell duration Index.\n')
+  cat('..... Computing: CSDI. Cold spell duration Index.\n')
   CSDI <- 1:length(yrs_dts) %>%
     purrr::map(.f = function(i){
       tmn <- terra::rast(tmn_fls[tmn_dts %in% yrs_dts[[i]]])
@@ -180,7 +180,7 @@ calc_AgrClm <- function(season = season, shp_fl = shp_fl){
     }) %>% terra::rast()
   CSDI <- CSDI %>% terra::mask(shp)
   
-  cat('..... Computing: SHI: number of days with maximum temperatures > 29C and relative humidity > 50% (sheep)\n')
+  cat('..... Computing: SHI. Number of days with maximum temperature > 29C and relative humidity > 50% (sheep)\n')
   SHI <- 1:length(yrs_dts) %>%
     purrr::map(.f = function(i){
       tmx <- terra::rast(tmx_fls[tmx_dts %in% yrs_dts[[i]]])
