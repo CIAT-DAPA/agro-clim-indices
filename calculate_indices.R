@@ -7,6 +7,21 @@ suppressMessages(pacman::p_load(tidyverse, terra, gtools, sf, furrr, future))
 
 source('https://raw.githubusercontent.com/CIAT-DAPA/agro-clim-indices/main/_main_functions.R')
 calc_SHIMP <- function(TMAX, RH){SHI <- ifelse(TMAX >= 29 & RH > 50, 1, 0); return(SHI)}; calc_SHIMP <- compiler::cmpfun(calc_SHIMP)
+calc_THIMP <- function(TMAX, RH){THI <- (1.8 * TMAX + 32) - ((0.55 - 0.0055 * RH) * (1.8 * TMAX - 26.8)); THI_n <- ifelse(test = THI >= 79 & THI < 89 | THI >= 89, yes = 1, no = 0); return(THI_n)}; calc_THIMP <- compiler::cmpfun(calc_THIMP)
+calc_HSIMP <- function(TMAX, RH){
+  # 2 ~ danger, 3 ~ emergency
+  # HSI_n <- ifelse((TMAX <= 26 & RH > 70 |
+  #                 TMAX <= 27 & RH >= 40 & RH < 85 |
+  #                 TMAX <= 28 & RH < 85 |
+  #                 TMAX <= 29 & RH < 60 |
+  #                 TMAX <= 30 & RH < 40), 1, 0)
+  HSI_n <- ifelse((TMAX <= 27 & RH >= 85 |
+                     TMAX <= 28 & RH >= 85 |
+                     TMAX <= 29 & RH >= 60 |
+                     TMAX <= 30 & RH >= 40 |
+                     TMAX > 30), 1, 0)
+  return(HSI_n)
+}; calc_HSIMP <- compiler::cmpfun(calc_HSIMP)
 
 seasons <- list(Kharif = 7:10, Rabi = c(10:12,1:2), Zaid = 3:6)
 shp_fl <- '//catalogue/Workspace14/WFP_ClimateRiskPr/1.Data/shps/india/ind_regions/ind_regions_d.shp'
@@ -165,7 +180,7 @@ calc_AgrClm <- function(season = season, shp_fl = shp_fl){
     }) %>% terra::rast()
   CSDI <- CSDI %>% terra::mask(shp)
   
-  cat('..... Computing: SHI: number of days with maximum temperatures > 29C and relative humidity > 50%.\n')
+  cat('..... Computing: SHI: number of days with maximum temperatures > 29C and relative humidity > 50% (sheep)\n')
   SHI <- 1:length(yrs_dts) %>%
     purrr::map(.f = function(i){
       tmx <- terra::rast(tmx_fls[tmx_dts %in% yrs_dts[[i]]])
@@ -180,6 +195,36 @@ calc_AgrClm <- function(season = season, shp_fl = shp_fl){
     }) %>% terra::rast()
   SHI <- SHI %>% terra::mask(shp)
   
+  cat('..... Computing: THI. Thermal humidity index (cattle).\n')
+  THI <- 1:length(yrs_dts) %>%
+    purrr::map(.f = function(i){
+      tmx <- terra::rast(tmx_fls[tmx_dts %in% yrs_dts[[i]]])
+      tmx <- tmx %>% terra::crop(terra::ext(shp)) %>% terra::mask(shp)
+      tmx <- tmx - 273.15
+      rhy <- terra::rast(rhy_fls[rhy_dts %in% yrs_dts[[i]]])
+      rhy <- rhy %>% terra::crop(terra::ext(shp)) %>% terra::mask(shp)
+      THI <- terra::lapp(x = terra::sds(tmx, rhy), fun = calc_THIMP)
+      THI <- sum(THI)/terra::nlyr(tmx)
+      names(THI) <- lubridate::year(yrs_dts[[i]]) %>% unique() %>% paste0(collapse = '-')
+      return(THI)
+    }) %>% terra::rast()
+  THI <- THI %>% terra::mask(shp)
+  
+  cat('..... Computing: HSI. Heat stress index (pig).\n')
+  HSI <- 1:length(yrs_dts) %>%
+    purrr::map(.f = function(i){
+      tmx <- terra::rast(tmx_fls[tmx_dts %in% yrs_dts[[i]]])
+      tmx <- tmx %>% terra::crop(terra::ext(shp)) %>% terra::mask(shp)
+      tmx <- tmx - 273.15
+      rhy <- terra::rast(rhy_fls[rhy_dts %in% yrs_dts[[i]]])
+      rhy <- rhy %>% terra::crop(terra::ext(shp)) %>% terra::mask(shp)
+      HSI <- terra::lapp(x = terra::sds(tmx, rhy), fun = calc_HSIMP)
+      HSI <- sum(HSI)/terra::nlyr(tmx)
+      names(HSI) <- lubridate::year(yrs_dts[[i]]) %>% unique() %>% paste0(collapse = '-')
+      return(HSI)
+    }) %>% terra::rast()
+  HSI <- HSI %>% terra::mask(shp)
+  
   cat('..... End.\n')
   return(list(AT    = AT,
               TR    = TR,
@@ -188,7 +233,9 @@ calc_AgrClm <- function(season = season, shp_fl = shp_fl){
               P5D   = P5D,
               P95   = P95,
               CSDI  = CSDI,
-              SHI   = SHI))
+              SHI   = SHI,
+              THI   = THI,
+              HSI   = HSI))
   
 }
 
