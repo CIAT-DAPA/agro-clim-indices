@@ -93,8 +93,7 @@ calc_AgrClm <- function(season = season, shp_fl = shp_fl){
   rhy_dts <- rhy_dts[lubridate::year(rhy_dts) %in% yrs]
   
   cnd <- lubridate::month(tmx_dts) %in% season # Days within the season
-  yrs_dts <- split(tmx_dts[cnd],cumsum(c(1,diff(tmx_dts[cnd])!=1)))
-  yrs_dts <<- yrs_dts[-length(yrs_dts)]
+  yrs_dts <<- split(tmx_dts[cnd],cumsum(c(1,diff(tmx_dts[cnd])!=1)))
   
   cat('..... Computing: AT. Average temperature.\n')
   AT <- 1:length(yrs_dts) %>%
