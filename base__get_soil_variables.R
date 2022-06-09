@@ -27,6 +27,9 @@ get_soil <- function(shp_fl = shp_fl, root_depth = 60, outfiles = c('./soilcp.ti
     r[!is.na(r[])] <- 1
     crd <- r %>% raster::as.data.frame(xy = T, na.rm = T)
     names(crd)[3] <- 'vals'
+    crd$id <- 1:nrow(crd)
+    crd$vals <- NULL
+    crd <- crd[,c('id','x','y')]
     
     # Soil data repository. ISRIC soil data 250 m
     soils_root <- '//192.168.20.97/data_cluster17/GLOBAL/Biofisico/SoilGrids250m'
@@ -124,8 +127,8 @@ get_soil <- function(shp_fl = shp_fl, root_depth = 60, outfiles = c('./soilcp.ti
       }) %>%
       dplyr::bind_rows()
     
-    scp  <- raster::rasterFromXYZ(xyz = soil_data4[,c('x','y','scp')], crs = sp::CRS(r))
-    ssat <- raster::rasterFromXYZ(xyz = soil_data4[,c('x','y','ssat')], crs = sp::CRS(r))
+    scp  <- raster::rasterFromXYZ(xyz = soil_data4[,c('x','y','scp')], res = raster::res(r), crs = sp::CRS(r))
+    ssat <- raster::rasterFromXYZ(xyz = soil_data4[,c('x','y','ssat')], res = raster::res(r), crs = sp::CRS(r))
     
     dir.create(path = dirname(outfiles[1]), FALSE, TRUE)
     
