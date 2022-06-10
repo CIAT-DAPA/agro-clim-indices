@@ -26,7 +26,7 @@ calc_HSIMP <- function(TMAX, RH){
 seasons <- list(Kharif = 7:10, Rabi = c(10:12,1:2), Zaid = 3:6)
 shp_fl <- '//catalogue/Workspace14/WFP_ClimateRiskPr/1.Data/shps/india/ind_regions/ind_regions_d.shp'
 
-# Function to compute Agro-climatic indices
+# Function to compute basic Agro-climatic indices
 calc_AgrClm <- function(season = season, shp_fl = shp_fl){
   
   ## ROI: regions of interest
