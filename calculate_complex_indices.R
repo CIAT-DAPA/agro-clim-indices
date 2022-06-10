@@ -89,23 +89,23 @@ calc_AgrClm_cmplx <- function(season = season, shp_fl = shp_fl){
   WTBL <- 1:length(yrs_dts) %>%
     purrr::map(.f = function(i){
       tmn <- terra::rast(tmn_fls[tmn_dts %in% yrs_dts[[i]]])
-      tmn <- tmn %>% terra::crop(terra::ext(tmp)) %>% terra::mask(tmp)
+      tmn <- tmn %>% terra::crop(terra::ext(shp)) %>% terra::mask(shp)
       tmn <- tmn - 273.15
       tmn <- tmn %>% terra::resample(x = ., y = tmp) %>% terra::mask(tmp)
       tav <- terra::rast(tav_fls[tav_dts %in% yrs_dts[[i]]])
-      tav <- tav %>% terra::crop(terra::ext(tmp)) %>% terra::mask(tmp)
+      tav <- tav %>% terra::crop(terra::ext(shp)) %>% terra::mask(shp)
       tav <- tav - 273.15
       tav <- tav %>% terra::resample(x = ., y = tmp) %>% terra::mask(tmp)
       tmx <- terra::rast(tmx_fls[tmx_dts %in% yrs_dts[[i]]])
-      tmx <- tmx %>% terra::crop(terra::ext(tmp)) %>% terra::mask(tmp)
+      tmx <- tmx %>% terra::crop(terra::ext(shp)) %>% terra::mask(shp)
       tmx <- tmx - 273.15
       tmx <- tmx %>% terra::resample(x = ., y = tmp) %>% terra::mask(tmp)
       srd <- terra::rast(srd_fls[srd_dts %in% yrs_dts[[i]]])
-      srd <- srd %>% terra::crop(terra::ext(tmp)) %>% terra::mask(tmp)
+      srd <- srd %>% terra::crop(terra::ext(shp)) %>% terra::mask(shp)
       srd <- srd/1000000
       srd <- srd %>% terra::resample(x = ., y = tmp) %>% terra::mask(tmp)
       prc <- terra::rast(chr_fls[chr_dts %in% yrs_dts[[i]]])
-      prc <- prc %>% terra::crop(terra::ext(tmp)) %>% terra::mask(tmp)
+      prc <- prc %>% terra::crop(terra::ext(shp)) %>% terra::mask(shp)
       prc[prc == -9999] <- 0
       
       # Maximum evapotranspiration
