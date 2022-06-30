@@ -12,8 +12,8 @@ suppressMessages(pacman::p_load(tidyverse,terra,extRemes)) # rtsVis
 # reticulate::use_miniconda(condaenv = 'Miniconda3')
 # suppressMessages(pacman::p_load(tensorflow, keras))
 #------------------------------------------------------------------------------#
-# main function
-source("//CATALOGUE/Workspace14/WFP_ClimateRiskPr/0.Project_Documents/ext_val_main.R", encoding = 'UTF-8')
+# Sourcing functions
+source("https://raw.githubusercontent.com/CIAT-DAPA/agro-clim-indices/main/_ext_val_main_function.R")
 #------------------------------------------------------------------------------#
 # root
 root <- paste0('//catalogue/Workspace14/WFP_ClimateRiskPr/0.Project_Documents/')
