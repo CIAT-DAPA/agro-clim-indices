@@ -4,6 +4,8 @@
 # Alliance Bioversity-CIAT, 2022
 # -------------------------------------------------------------------- #
 
+source('https://raw.githubusercontent.com/CIAT-DAPA/agro-clim-indices/main/AWCPTF.R')
+
 # Input parameters:
 #   shp_fl: shapefile with the regions of interest
 #   root_depth: root depth in cm (it's assumed to be constant over all coordinates)
@@ -16,16 +18,17 @@ get_soil <- function(shp_fl = shp_fl, root_depth = 60, outfiles = c('./soilcp.ti
   if(sum(!file.exists(outfiles)) != 0){
     # Load packages
     if(!require(pacman)){install.packages('pacman'); library(pacman)} else {suppressMessages(library(pacman))}
-    suppressMessages(pacman::p_load(raster, tidyverse, fst, GSIF, vroom))
+    suppressMessages(pacman::p_load(terra, tidyverse))
     
     # Load CHIRPS template
     #//catalogue/BaseLineDataCluster01/observed/gridded_products/chirps/daily/chirps-v2.0.2020.01.01.tif
-    tmp <- raster::raster("//CATALOGUE/Workspace14/WFP_ClimateRiskPr/1.Data/chirps-v2.0.2020.01.01.tif")
+    tmp <- terra::rast("//CATALOGUE/Workspace14/WFP_ClimateRiskPr/1.Data/chirps-v2.0.2020.01.01.tif")
     ## ROI: regions of interest
-    shp <- raster::shapefile(shp_fl)
-    r <- tmp %>% raster::crop(raster::extent(shp)) %>% raster::mask(shp)
-    r[!is.na(r[])] <- 1
-    crd <- r %>% raster::as.data.frame(xy = T, na.rm = T)
+    shp <- terra::vect(shp_fl)
+    r <- tmp %>% terra::crop(terra::ext(shp)) %>% terra::mask(shp)
+    r[r == -9999] <- NA
+    r[!is.na(r)]  <- 1
+    crd <- r %>% terra::as.data.frame(xy = T, na.rm = T)
     names(crd)[3] <- 'vals'
     crd$id <- 1:nrow(crd)
     crd$vals <- NULL
@@ -34,50 +37,48 @@ get_soil <- function(shp_fl = shp_fl, root_depth = 60, outfiles = c('./soilcp.ti
     # Soil data repository. ISRIC soil data 250 m
     soils_root <- '//192.168.20.97/data_cluster17/GLOBAL/Biofisico/SoilGrids250m'
     # Soil organic carbon content
-    orc <- raster::stack(list.files(paste0(soils_root,'/Chemical soil properties/Soil organic carbon content'), pattern = '.tif$', full.names = T) %>% sort())
+    orc <- terra::rast(list.files(paste0(soils_root,'/Chemical soil properties/Soil organic carbon content'), pattern = '.tif$', full.names = T) %>% sort())
     # Cation exchange capacity
-    cec <- raster::stack(list.files(paste0(soils_root,'/Chemical soil properties/Cation exchange capacity (CEC)'), pattern = '.tif$', full.names = T) %>% sort())
+    cec <- terra::rast(list.files(paste0(soils_root,'/Chemical soil properties/Cation exchange capacity (CEC)'), pattern = '.tif$', full.names = T) %>% sort())
     # Soil ph in H2O
-    phx <- raster::stack(list.files(paste0(soils_root,'/Chemical soil properties/Soil ph in H2O'), pattern = '.tif$', full.names = T) %>% sort())
+    phx <- terra::rast(list.files(paste0(soils_root,'/Chemical soil properties/Soil ph in H2O'), pattern = '.tif$', full.names = T) %>% sort())
     # Sand content
-    snd <- raster::stack(list.files(paste0(soils_root,'/Physical soil properties/Sand content'), pattern = '.tif$', full.names = T) %>% sort())
+    snd <- terra::rast(list.files(paste0(soils_root,'/Physical soil properties/Sand content'), pattern = '.tif$', full.names = T) %>% sort())
     # Silt content
-    slt <- raster::stack(list.files(paste0(soils_root,'/Physical soil properties/Silt content'), pattern = '.tif$', full.names = T) %>% sort())
+    slt <- terra::rast(list.files(paste0(soils_root,'/Physical soil properties/Silt content'), pattern = '.tif$', full.names = T) %>% sort())
     # Clay content
-    cly <- raster::stack(list.files(paste0(soils_root,'/Physical soil properties/Clay content (0-2 micro meter) mass fraction'), pattern = '.tif$', full.names = T) %>% sort())
+    cly <- terra::rast(list.files(paste0(soils_root,'/Physical soil properties/Clay content (0-2 micro meter) mass fraction'), pattern = '.tif$', full.names = T) %>% sort())
     # Bulk density
-    bld <- raster::stack(list.files(paste0(soils_root,'/Physical soil properties/Bulk density (fine earth)'), pattern = '.tif$', full.names = T) %>% sort())
+    bld <- terra::rast(list.files(paste0(soils_root,'/Physical soil properties/Bulk density (fine earth)'), pattern = '.tif$', full.names = T) %>% sort())
     
     # Put all layers together and resampling them to the proper resolution 5 km
-    soil <- raster::stack(orc,cec,phx,snd,slt,cly,bld)
+    soil <- terra::rast(list(orc,cec,phx,snd,slt,cly,bld))
     soil <- soil %>%
-      raster::crop(., raster::extent(r)) %>%
-      raster::resample(., r) %>%
-      raster::mask(., mask = r)
+      terra::crop(., terra::ext(r)) %>%
+      terra::resample(., r) %>%
+      terra::mask(., mask = r)
     
     # Obtain soil data for the corresponding coordinates
-    soil_data <- cbind(crd, raster::extract(soil, crd[,c('x','y')]))
+    soil_data <- cbind(crd, terra::extract(soil, crd[,c('x','y')]))
+    soil_data$ID <- NULL
     
     # Arrange the soil data at different depth levels
     soil_data2 <- soil_data %>%
-      tidyr::gather(key = 'var', value = 'val', -(1:3)) %>%
+      tidyr::pivot_longer(names_to = 'var', values_to = 'val', -(1:3)) %>%
       tidyr::separate(col = 'var', sep = '_M_', into = c('var','depth')) %>%
-      tidyr::spread(key = 'var', value = 'val') %>%
+      tidyr::pivot_wider(names_from = 'var', values_from = 'val') %>%
       dplyr::arrange(id)
     soil_data2$depth <- gsub('_250m_ll','',soil_data2$depth)
     
-    # Save this table FIX THIS
-    # fst::write_fst(soil_data2, '//dapadfs.cgiarad.org/workspace_cluster_8/climateriskprofiles/data/soil_data.fst')
-    
     # Get Available soil water capacity per depth level
-    soil_data2 <- cbind(soil_data2,GSIF::AWCPTF(SNDPPT = soil_data2$SNDPPT,
-                                                SLTPPT = soil_data2$SLTPPT,
-                                                CLYPPT = soil_data2$CLYPPT,
-                                                ORCDRC = soil_data2$ORCDRC,
-                                                BLD = soil_data2$BLDFIE,
-                                                CEC = soil_data2$CECSOL,
-                                                PHIHOX = soil_data2$PHIHOX/10,
-                                                h1=-10, h2=-20, h3=-33))
+    soil_data2 <- cbind(soil_data2,AWCPTF(SNDPPT = soil_data2$SNDPPT,
+                                          SLTPPT = soil_data2$SLTPPT,
+                                          CLYPPT = soil_data2$CLYPPT,
+                                          ORCDRC = soil_data2$ORCDRC,
+                                          BLD = soil_data2$BLDFIE,
+                                          CEC = soil_data2$CECSOL,
+                                          PHIHOX = soil_data2$PHIHOX/10,
+                                          h1=-10, h2=-20, h3=-33))
     
     #now calculate the ASW in mm for each soil horizon
     soil_data2$tetaFC <- soil_data2$WWP + soil_data2$AWCh3 #volumetric water content at field capacity (fraction)
@@ -127,13 +128,13 @@ get_soil <- function(shp_fl = shp_fl, root_depth = 60, outfiles = c('./soilcp.ti
       }) %>%
       dplyr::bind_rows()
     
-    scp  <- raster::rasterFromXYZ(xyz = soil_data4[,c('x','y','scp')], res = raster::res(r), crs = sp::CRS(r))
-    ssat <- raster::rasterFromXYZ(xyz = soil_data4[,c('x','y','ssat')], res = raster::res(r), crs = sp::CRS(r))
+    scp  <- terra::rast(x = soil_data4[,c('x','y','scp')], type = 'xyz', crs = terra::crs(r))
+    ssat <- terra::rast(x = soil_data4[,c('x','y','ssat')], type = 'xyz', crs = terra::crs(r))
     
     dir.create(path = dirname(outfiles[1]), FALSE, TRUE)
     
-    raster::writeRaster(x = scp, filename = outfiles[1], overwrite = T)
-    raster::writeRaster(x = ssat, filename = outfiles[2], overwrite = T)
+    terra::writeRaster(x = scp, filename = outfiles[1], overwrite = T)
+    terra::writeRaster(x = ssat, filename = outfiles[2], overwrite = T)
     
   } else {
     cat('Soil capacity and soil saturation variables are already calculated.\n')
