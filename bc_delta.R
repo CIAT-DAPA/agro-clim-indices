@@ -28,7 +28,7 @@ bc_delta <- function(gcm, var, prd, iso, out){
   fls_his <- grep(pattern = var, x = fls_his, value = T)
   
   # Identify the right files
-  dts <- strsplit(x = fls_his, split = '_gn_|_gr[0-9]_') %>% purrr::map(2) %>% as.character()
+  dts <- strsplit(x = fls_his, split = '_gn_|_gr_|_gr[0-9]_') %>% purrr::map(2) %>% as.character()
   dts <- gsub(pattern = '.nc', replacement = '', x = dts, fixed = T)
   dts <- strsplit(x = dts, split = '-')
   ini <- dts %>% purrr::map(.f = function(vct){
@@ -61,7 +61,7 @@ bc_delta <- function(gcm, var, prd, iso, out){
   fls_fut <- grep(pattern = var, x = fls_fut, value = T)
   
   # Identify the right files
-  dts <- strsplit(x = fls_fut, split = '_gn_|_gr[0-9]_') %>% purrr::map(2) %>% as.character()
+  dts <- strsplit(x = fls_fut, split = '_gn_|_gr_|_gr[0-9]_') %>% purrr::map(2) %>% as.character()
   dts <- gsub(pattern = '.nc', replacement = '', x = dts, fixed = T)
   dts <- strsplit(x = dts, split = '-')
   ini <- dts %>% purrr::map(.f = function(vct){
