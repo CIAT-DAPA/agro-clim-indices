@@ -9,9 +9,9 @@ root <- '//CATALOGUE/Workspace14/WFP_ClimateRiskPr/1.Data/climate/CMIP6'
 
 gcm <- 'ACCESS-ESM1-5'
 var <- 'tasmin' # pr, tasmax, tasmin
-prd <- c(2021, 2040)
+prd <- c(2041, 2060)
 iso <- 'MLI'
-out <- '//catalogue/Workspace14/WFP_ClimateRiskPr/0.Project_Documents'
+out <- '//catalogue/Workspace14/WFP_ClimateRiskPr/0.Project_Documents'; if(!dir.exists(out)){dir.create(out, F, T)}
 
 bc_delta <- function(gcm, var, prd, iso, out){
   
@@ -23,7 +23,7 @@ bc_delta <- function(gcm, var, prd, iso, out){
   
   # Lists all the historical files
   bsl <- c(1995, 2014)
-  fls <- list.files(path = paste0(root,'/download_data'), pattern = gcm, full.names = T)
+  fls <- list.files(path = paste0(root,'/download_data_to_delete'), pattern = gcm, full.names = T)
   fls_his <- grep(pattern = 'historical', x = fls, value = T)
   fls_his <- grep(pattern = var, x = fls_his, value = T)
   
@@ -56,7 +56,7 @@ bc_delta <- function(gcm, var, prd, iso, out){
   ## --------------------------------------------------------------------------------- ##
   
   # Lists all the future files
-  fls <- list.files(path = paste0(root,'/download_data'), pattern = gcm, full.names = T)
+  fls <- list.files(path = paste0(root,'/download_data_to_delete'), pattern = gcm, full.names = T)
   fls_fut <- grep(pattern = 'ssp585', x = fls, value = T)
   fls_fut <- grep(pattern = var, x = fls_fut, value = T)
   
@@ -218,7 +218,7 @@ bc_delta <- function(gcm, var, prd, iso, out){
     terra::rast()
   result <- result[[order(terra::time(result))]]
   
-  terra::writeRaster(x = result, filename = paste0(out,'/',iso,'_',var,'_',prd[1],'-',prd[2],'.tif'), overwrite = T)
+  terra::writeRaster(x = result, filename = paste0(out,'/',iso,'_',gcm,'_',var,'_',prd[1],'-',prd[2],'.tif'), overwrite = T)
   
 }
 bc_delta(gcm, var, prd, iso, out)
