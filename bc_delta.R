@@ -23,12 +23,12 @@ bc_delta <- function(gcm, var, prd, iso, out){
   
   # Lists all the historical files
   bsl <- c(1995, 2014)
-  fls <- list.files(path = paste0(root,'/download_data_to_delete'), pattern = gcm, full.names = T)
+  fls <- list.files(path = paste0(root,'/download_data'), pattern = gcm, full.names = T)
   fls_his <- grep(pattern = 'historical', x = fls, value = T)
   fls_his <- grep(pattern = var, x = fls_his, value = T)
   
   # Identify the right files
-  dts <- strsplit(x = fls_his, split = '_gn_') %>% purrr::map(2) %>% as.character()
+  dts <- strsplit(x = fls_his, split = '_gn_|_gr[0-9]_') %>% purrr::map(2) %>% as.character()
   dts <- gsub(pattern = '.nc', replacement = '', x = dts, fixed = T)
   dts <- strsplit(x = dts, split = '-')
   ini <- dts %>% purrr::map(.f = function(vct){
@@ -56,12 +56,12 @@ bc_delta <- function(gcm, var, prd, iso, out){
   ## --------------------------------------------------------------------------------- ##
   
   # Lists all the future files
-  fls <- list.files(path = paste0(root,'/download_data_to_delete'), pattern = gcm, full.names = T)
+  fls <- list.files(path = paste0(root,'/download_data'), pattern = gcm, full.names = T)
   fls_fut <- grep(pattern = 'ssp585', x = fls, value = T)
   fls_fut <- grep(pattern = var, x = fls_fut, value = T)
   
   # Identify the right files
-  dts <- strsplit(x = fls_fut, split = '_gn_') %>% purrr::map(2) %>% as.character()
+  dts <- strsplit(x = fls_fut, split = '_gn_|_gr[0-9]_') %>% purrr::map(2) %>% as.character()
   dts <- gsub(pattern = '.nc', replacement = '', x = dts, fixed = T)
   dts <- strsplit(x = dts, split = '-')
   ini <- dts %>% purrr::map(.f = function(vct){
