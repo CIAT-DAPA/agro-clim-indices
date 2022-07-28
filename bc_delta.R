@@ -1,18 +1,22 @@
+## --------------------------------------------------------------------------------- ##
+
+## --------------------------------------------------------------------------------- ##
 # R options
 g <- gc(reset = T); rm(list = ls()) # Empty garbage collector
 # .rs.restartR()                      # Restart R session
 options(warn = -1, scipen = 999)    # Remove warning alerts and scientific notation
 suppressMessages(library(pacman))
 suppressMessages(pacman::p_load(tidyverse, terra, lubridate))
-
+## --------------------------------------------------------------------------------- ##
 root <- '//CATALOGUE/Workspace14/WFP_ClimateRiskPr/1.Data/climate/CMIP6'
-
-gcm <- 'ACCESS-ESM1-5'
-var <- 'tasmin' # pr, tasmax, tasmin
+## --------------------------------------------------------------------------------- ##
+gcm <- 'MRI-ESM2-0' # ACCESS-ESM1-5, EC-Earth3-Veg, INM-CM5-0, MPI-ESM1-2-HR, MRI-ESM2-0
+ssp <- 'ssp126' # ssp126, ssp245, ssp370, ssp585
+var <- 'tasmax' # pr, tasmax, tasmin
 prd <- c(2041, 2060)
 iso <- 'MLI'
-out <- '//catalogue/Workspace14/WFP_ClimateRiskPr/0.Project_Documents'; if(!dir.exists(out)){dir.create(out, F, T)}
-
+out <- paste0('//catalogue/Workspace14/WFP_ClimateRiskPr/0.Project_Documents/',iso,'/',ssp,'/',gcm); if(!dir.exists(out)){dir.create(out, F, T)}
+## --------------------------------------------------------------------------------- ##
 bc_delta <- function(gcm, var, prd, iso, out){
   
   cat(paste0('Processing: model ',gcm,', variable ',var,', future period ',prd[1],'-',prd[2],' in ',iso,'\n'))
@@ -23,7 +27,7 @@ bc_delta <- function(gcm, var, prd, iso, out){
   
   # Lists all the historical files
   bsl <- c(1995, 2014)
-  fls <- list.files(path = paste0(root,'/download_data'), pattern = gcm, full.names = T)
+  fls <- list.files(path = paste0(root,'/download_data/', ssp, '/', gcm), pattern = gcm, full.names = T)
   fls_his <- grep(pattern = 'historical', x = fls, value = T)
   fls_his <- grep(pattern = var, x = fls_his, value = T)
   
@@ -56,8 +60,8 @@ bc_delta <- function(gcm, var, prd, iso, out){
   ## --------------------------------------------------------------------------------- ##
   
   # Lists all the future files
-  fls <- list.files(path = paste0(root,'/download_data'), pattern = gcm, full.names = T)
-  fls_fut <- grep(pattern = 'ssp585', x = fls, value = T)
+  fls <- list.files(path = paste0(root,'/download_data/',ssp,'/',gcm), pattern = gcm, full.names = T)
+  fls_fut <- grep(pattern = ssp, x = fls, value = T)
   fls_fut <- grep(pattern = var, x = fls_fut, value = T)
   
   # Identify the right files
@@ -218,7 +222,8 @@ bc_delta <- function(gcm, var, prd, iso, out){
     terra::rast()
   result <- result[[order(terra::time(result))]]
   
-  terra::writeRaster(x = result, filename = paste0(out,'/',iso,'_',gcm,'_',var,'_',prd[1],'-',prd[2],'.tif'), overwrite = T)
+  terra::writeRaster(x = result, filename = paste0(out,'/',iso,'_',ssp,'_',gcm,'_',var,'_',prd[1],'-',prd[2],'.tif'), overwrite = T)
   
 }
+## --------------------------------------------------------------------------------- ##
 bc_delta(gcm, var, prd, iso, out)
