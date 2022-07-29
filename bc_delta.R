@@ -202,6 +202,7 @@ bc_delta <- function(gcm, var, prd, iso, out){
           
           obs <- terra::rast(obs_fls[obs_dts %in% flt])
           obs <- obs %>% terra::crop(terra::ext(shp), snap = 'out') %>% terra::mask(shp, touches = T)
+          obs[obs == -9999] <- NA
           if(var %in% c('tasmin','tasmax')){
             obs <- obs - 273.15
           }
