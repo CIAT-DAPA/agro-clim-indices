@@ -14,8 +14,9 @@ gcm <- 'MRI-ESM2-0' # ACCESS-ESM1-5, EC-Earth3-Veg, INM-CM5-0, MPI-ESM1-2-HR, MR
 ssp <- 'ssp126' # ssp126, ssp245, ssp370, ssp585
 var <- 'tasmax' # pr, tasmax, tasmin
 prd <- c(2041, 2060)
+periodo <- ('2030s') # 2050s
 iso <- 'MLI'
-out <- paste0('//catalogue/Workspace14/WFP_ClimateRiskPr/0.Project_Documents/',iso,'/',ssp,'/',gcm); if(!dir.exists(out)){dir.create(out, F, T)}
+out <- paste0('//catalogue//WFP_ClimateRiskPr1/7.Results/Colombia/bias_corrected/',periodo,'/',ssp,'/',gcm); if(!dir.exists(out)){dir.create(out, F, T)}
 ## --------------------------------------------------------------------------------- ##
 bc_delta <- function(gcm, var, prd, iso, out){
   
@@ -89,7 +90,9 @@ bc_delta <- function(gcm, var, prd, iso, out){
     }) %>% terra::rast()
   
   # Country mask
-  shp <- geodata::gadm(country = iso, level = 0, path = base::tempdir())
+  # shp <- geodata::gadm(country = iso, level = 0, path = base::tempdir())
+  shp <- terra::vect(paste0('//CATALOGUE/WFP_ClimateRiskPr1/1.Data/shps/',iso, '/',iso,'_GADM1.shp'))
+  
   
   result <- 1:12 %>%
     purrr::map(.f = function(mnth){
@@ -229,7 +232,13 @@ bc_delta <- function(gcm, var, prd, iso, out){
     terra::rast()
   result <- result[[order(terra::time(result))]]
   
-  terra::writeRaster(x = result, filename = paste0(out,'/',iso,'_',ssp,'_',gcm,'_',var,'_',prd[1],'-',prd[2],'.tif'), overwrite = T)
+  # Save individual rasters
+  1:(terra::nlyr(result)) %>%
+    purrr::map(.f = function(i){
+      terra::writeRaster(x = result[[i]], filename = paste0(out,'/',iso,'_',ssp,'_',gcm,'_',var,'_',periodo,'__',as.character(names(result[[i]])),'.tif'), overwrite = T)
+    })
+  
+  # terra::writeRaster(x = result, filename = paste0(out,'/',iso,'_',ssp,'_',gcm,'_',var,'_',prd[1],'-',prd[2],'.tif'), overwrite = T)
   
 }
 ## --------------------------------------------------------------------------------- ##
