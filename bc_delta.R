@@ -201,6 +201,7 @@ bc_delta <- function(gcm, var, prd, iso, out){
         purrr::map(.f = function(flt){
           
           obs <- terra::rast(obs_fls[obs_dts %in% flt])
+          terra::time(obs) <- as.Date(flt)
           obs <- obs %>% terra::crop(terra::ext(shp), snap = 'out') %>% terra::mask(shp, touches = T)
           obs[obs == -9999] <- NA
           if(var %in% c('tasmin','tasmax')){
@@ -208,10 +209,15 @@ bc_delta <- function(gcm, var, prd, iso, out){
           }
           obs <- terra::resample(x = obs, y = ref)
           
+          # Truncate the top 2% of anomaly values
+          thr <- as.numeric(terra::global(x = intp, fun = stats::quantile, probs = 0.98, na.rm = T))
+          intp[intp >= thr] <- thr
+          
           if(var %in% c('tasmin','tasmax')){
             fut_ds_bc <- obs + intp
           } else {
             fut_ds_bc <- obs * (1 + intp)
+            fut_ds_bc[fut_ds_bc < 0] <- 0 # Deal with negative values
           }
           return(fut_ds_bc)
           
