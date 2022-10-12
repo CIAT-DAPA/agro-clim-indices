@@ -139,6 +139,8 @@ bc_delta <- function(gcm, var, prd, iso, out){
       } else {
         avg_his <- avg_his * 86400
         avg_fut <- avg_fut * 86400
+        avg_his[avg_his < 0] <- 0
+        avg_fut[avg_fut < 0] <- 0
       }
       
       avg_his <- terra::rotate(avg_his)
@@ -148,6 +150,9 @@ bc_delta <- function(gcm, var, prd, iso, out){
         anom <- avg_fut - avg_his
       } else {
         anom <- (avg_fut - avg_his)/avg_his
+        # Truncate the top 2% of anomaly values
+        thr <- as.numeric(terra::global(x = anom, fun = stats::quantile, probs = 0.98, na.rm = T))
+        anom[anom >= thr] <- thr
       }
       
       anom <- anom %>% terra::crop(terra::ext(shp), snap = 'out')#  %>% terra::mask(shp, touches = T)
@@ -212,10 +217,6 @@ bc_delta <- function(gcm, var, prd, iso, out){
           }
           obs <- terra::resample(x = obs, y = ref)
           
-          # Truncate the top 2% of anomaly values
-          thr <- as.numeric(terra::global(x = intp, fun = stats::quantile, probs = 0.98, na.rm = T))
-          intp[intp >= thr] <- thr
-          
           if(var %in% c('tasmin','tasmax')){
             fut_ds_bc <- obs + intp
           } else {
@@ -237,7 +238,6 @@ bc_delta <- function(gcm, var, prd, iso, out){
     purrr::map(.f = function(i){
       terra::writeRaster(x = result[[i]], filename = paste0(out,'/',iso,'_',ssp,'_',gcm,'_',var,'_',periodo,'__',as.character(names(result[[i]])),'.tif'), overwrite = T)
     })
-  
   # terra::writeRaster(x = result, filename = paste0(out,'/',iso,'_',ssp,'_',gcm,'_',var,'_',prd[1],'-',prd[2],'.tif'), overwrite = T)
   
 }
